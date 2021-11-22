@@ -1,0 +1,22 @@
+.app-store-icon-container {
+    /* display: grid; */
+    align-items: center;
+    /* grid-template-columns: auto auto; */
+    grid-column-gap: 5px;
+}
+
+.app-store-icon-container img {
+    /* height:75px; */
+    height: 75px;
+    margin-right:5px;
+}
+
+@media screen and (max-width: 768px) {
+    
+    .app-store-icon-container img {
+        max-width:150px;
+        max-height:40px;
+        height:auto;
+        margin-bottom:5px;
+    }
+}
