@@ -1,0 +1,54 @@
+@using issuer.Model
+@inject HttpClient Http
+
+@if (Request == null) return;
+
+<div class="row">
+    <h1>Get your credential!</h1>
+    <h6>Tap below to add to your wallet.</h6>
+</div>
+
+<div class="row vc-add-mobile">
+    <a href=@Request.Url>
+        <img src="img/add-to-auth.png" alt="add to authenticator" class="authenticator-badge" />
+    </a>
+</div>
+<hr />
+<a class="btn btn-primary" style="width:100%;margin-bottom:10px;" onclick="@OnToggleQrCode">@showHideText</a>
+<div class="row vc-add-qr" hidden="@hideQrCode">
+    <p>Scan this code from Microsoft Authenticator</p>
+    <div class="qr-container">
+        <img src="data:image/png;base64,@Convert.ToBase64String(image)">
+    </div>
+</div>
+<hr />
+<GetAuthenticator />
+
+@code {
+    private byte[] image;
+    private bool hideQrCode { get; set; } = true;
+    private string showHideText { get; set; } = "Not on your phone? Show QR code";
+
+    [Parameter, EditorRequired]
+    public CredentialRequestModel Request { get; set; }
+
+    protected override void OnInitialized()
+    {
+        SetQrCode();
+        base.OnInitialized();
+    }
+
+    private void OnToggleQrCode(EventArgs args)
+    {
+        hideQrCode = !hideQrCode;
+        showHideText = $"{(hideQrCode ? "Not on your phone? Show QR code" : "Hide QR code")}";
+    }
+
+    private void SetQrCode()
+    {
+        QRCoder.QRCodeGenerator qrGenerator = new QRCoder.QRCodeGenerator();
+        QRCoder.QRCodeData qrData = qrGenerator.CreateQrCode(Request?.Url, QRCoder.QRCodeGenerator.ECCLevel.Q);
+        QRCoder.PngByteQRCode qrCode = new QRCoder.PngByteQRCode(qrData);
+        this.image = qrCode.GetGraphic(20);
+    }
+}

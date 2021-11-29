@@ -1,6 +1,7 @@
-﻿@page "/"
+﻿@page "/{credentialType?}"
 @using issuer.Model
 @inject HttpClient Http
+@inject IConfiguration Configuration
 
 
 <PageTitle>425show Verified Credentials</PageTitle>
@@ -12,52 +13,21 @@
 
 @if (requestModel != null)
 {
-    <div class="row">
-        <h1>Get your credential!</h1>
-        <h6>Tap below to add to your wallet.</h6>
-    </div>
-
-    <div class="row vc-add-mobile">
-        <a href=@requestModel.Url>
-            <img src="img/add-to-auth.png" alt="add to authenticator" class="authenticator-badge" />
-        </a>
-    </div>
-    <hr/>
-    <a class="btn btn-primary" style="width:100%;margin-bottom:10px;" onclick="@OnToggleQrCode">@showHideText</a>
-    <div class="row vc-add-qr" hidden="@hideQrCode">
-        <p>Scan this code from Microsoft Authenticator</p>
-        <div class="qr-container">
-            <img src="data:image/png;base64,@Convert.ToBase64String(image)">
-        </div>
-    </div>
-    <hr/>
-    <GetAuthenticator />
+    <CredDisplay Request="@requestModel" />
 }
 
 @code {
-    private byte[] image = null;
-    private bool hideQrCode {get;set;} = true;
-    private string showHideText {get;set;} = "Not on your phone? Show QR code";
 
-    private CredentialRequestModel requestModel;
+    [Parameter]
+    public string? credentialType { get; set; }
 
-    private void OnToggleQrCode(EventArgs args)
-    {
-        hideQrCode = !hideQrCode;
-        showHideText = $"{(hideQrCode ? "Not on your phone? Show QR code" : "Hide QR code")}";
-    }
-
-    private void GenerateQrForRequest()
-    {
-        QRCoder.QRCodeGenerator qrGenerator = new QRCoder.QRCodeGenerator();
-        QRCoder.QRCodeData qrData = qrGenerator.CreateQrCode(requestModel.Url, QRCoder.QRCodeGenerator.ECCLevel.Q);
-        QRCoder.PngByteQRCode qrCode = new QRCoder.PngByteQRCode(qrData);
-        this.image = qrCode.GetGraphic(20);
-    }
+    private CredentialRequestModel? requestModel;
 
     protected override async Task OnInitializedAsync()
     {
-        requestModel = await Http.GetFromJsonAsync<CredentialRequestModel>("//jpda-api.ngrok.io/issuer/request");
-        GenerateQrForRequest();
+        //var issuer = Configuration.GetValue<string>("IssuerApiEndpoint");
+        var issuer = $"//jpda-api.ngrok.io/issuer/request/{credentialType}";
+        System.Diagnostics.Debug.WriteLine($"Issuer: {issuer}");
+        requestModel = await Http.GetFromJsonAsync<CredentialRequestModel>(issuer);
     }
 }
